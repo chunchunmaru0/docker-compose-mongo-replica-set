@@ -28,12 +28,13 @@ This `docker-compose` setup starts a local mongo replica set with 3 instances ru
 ## Are there any prerequisites? 
 * Docker
 * Docker Compose
-* The following in your `/etc/hosts` file:
+* The following in your `/etc/hosts` file: 
 ```
 127.0.0.1       mongo1
 127.0.0.1       mongo2
 127.0.0.1       mongo3
 ```
+This is not needed when doing from IP.
 
 ## How do I run the Replica Set?
 Simples:
@@ -61,6 +62,19 @@ rs.initiate(
       { _id : 2, host : "mongo3:30003" }
     ]
   }
+)
+```
+### Using LOCALIP instead of hostname: 
+```
+rs.initiate(
+   {
+      _id: "my-replica-set",
+      members: [
+         { _id: 0, host: "192.168.1.12:30001" },
+         { _id: 1, host: "192.168.1.12:30002" },
+         { _id: 2, host: "192.168.1.12:30003" }
+      ]
+   }
 )
 ```
 - This causes all 3 instances to join the replica set named `my-replica-set` and start talking to each other
