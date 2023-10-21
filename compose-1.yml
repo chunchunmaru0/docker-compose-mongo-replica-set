@@ -1,0 +1,147 @@
+version: "3.5"
+
+services:
+  anthem-mongo:
+    image: mongo:latest
+    container_name: anthem-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+    #Project Anthem Database
+      - /mnt/scale/database/anthem/db:/data/db
+      - /mnt/scale/database/anthem/config:/data/configdb
+    user: '1000:1000'
+      
+    command: ["--replSet", "anthemDB","--bind_ip_all"]
+
+  anthem-replica:
+    image: mongo:latest
+    container_name: anthem-replica
+    ports:
+      - "27018:27017"
+    volumes:
+      - /home/kale/project-anthem/mongo/db:/data/db
+      - /home/kale/project-anthem/mongo/config:/data/configdb
+    #user: '1000:1000'
+    command: ["--replSet", "anthemDB","--bind_ip_all"]
+
+  anthem-replica2:
+    image: mongo:latest
+    container_name: anthem-replica2
+    ports:
+      - "27019:27017"
+    volumes:
+      - /mnt/docker/eve/anthem/db:/data/db
+      - /mnt/docker/eve/anthem/config:/data/configdb
+    user: '1000:1000'
+    command: ["--replSet", "anthemDB","--bind_ip_all"]
+
+  anthem-express:
+    image: mongo-express:latest
+    container_name: anthem-express
+    environment:
+      ME_CONFIG_MONGODB_SERVER: anthem-mongo,anthem-replica,anthem-replica2
+      ME_CONFIG_MONGODB_PORT: "27017"
+    ports:
+      - "192.168.1.12:37200:8081"
+    depends_on:
+      - anthem-mongo
+      - anthem-replica
+      - anthem-replica2
+
+  project-anthem:
+      container_name: project-anthem
+      environment:
+        MONGODB_URL: mongodb://anthem-mongo:27017,anthem-replica:27017,anthem-replica2:27017
+        DISCORD_TOKEN: 
+        CLIENT_ID: 
+        GUILD_ID: 
+        TWITCH_CLIENT: 
+        TWITCH_SECRET: 
+      restart: 'on-failure:5'
+      depends_on:
+      - anthem-mongo
+      - anthem-replica
+      - anthem-replica2
+      image: aalupidalu/project-anthem:latest
+
+
+#without host assignment, using IP, wont work when conencting through tunel, works fine from local external ip
+# rs.initiate(
+#    {
+#       _id: "anthemDB",
+#       members: [
+#          { _id: 0, host: "192.168.1.12:27017" },
+#          { _id: 1, host: "192.168.1.12:27018" },
+#          { _id: 2, host: "192.168.1.12:27019" }
+#       ]
+#    }
+# )
+
+
+
+# version: "3.5"
+
+# services:
+#   anthem-mongo:
+#     image: mongo:latest
+#     container_name: anthem-mongo
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - /home/kale/project-anthem/mongo/db:/data/db
+#       - /home/kale/project-anthem/mongo/config:/data/configdb
+#     networks:
+#       - default
+#       - anthem_network
+#     command: ["--replSet", "my-replica-set", "--bind_ip_all"]
+
+#   anthem-replica:
+#     image: mongo:latest
+#     container_name: anthem-replica
+#     ports:
+#       - "27018:27017"
+#     volumes:
+#       - /mnt/docker/eve/anthem/db:/data/db
+#       - /mnt/docker/eve/anthem/config:/data/config
+#     user: '1000:1000'
+#     networks:
+#       - default
+#       - anthem_network
+#     command: ["--replSet", "my-replica-set", "--bind_ip_all"]
+
+#   anthem-express:
+#     image: mongo-express:latest
+#     container_name: anthem-express
+#     environment:
+#       ME_CONFIG_MONGODB_SERVER: anthem-mongo,anthem-replica
+#       ME_CONFIG_MONGODB_PORT: "27017"
+#     ports:
+#       - "8081:8081"
+#     depends_on:
+#       - anthem-mongo
+#       - anthem-replica
+#     networks:
+#       - default
+#       - anthem_network
+#   project-anthem:
+#       container_name: project-anthem
+#       environment:
+#         MONGODB_URL: mongodb://anthem-mongo:27017,anthem-replica:27017
+#         DISCORD_TOKEN:
+#         CLIENT_ID: 
+#         GUILD_ID: 
+#         TWITCH_CLIENT: 
+#         TWITCH_SECRET: 
+#       restart: 'on-failure:5'
+#       networks:
+#         - default
+#         - anthem_network
+#       depends_on:
+#         - anthem-mongo
+#         - anthem-replica
+#       image: aalupidalu/project-anthem:latest
+      
+# networks:
+#   anthem_network:
+#     external: true
